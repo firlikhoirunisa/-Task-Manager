@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <title>Task Manager</title>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Task Manager</h1>
+            <p class="text-gray-600">Kelola tugas Anda dengan mudah dan efisien</p>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-4 mt-4">
+                <div class="bg-blue-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ tasks|length }}</div>
+                    <div class="text-sm text-blue-600">Total Tasks</div>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-green-600">
+                        {{ tasks|selectattr('status', '==', 'completed')|list|length }}
+                    </div>
+                    <div class="text-sm text-green-600">Completed</div>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-orange-600">
+                        {{ tasks|selectattr('status', '==', 'pending')|list|length }}
+                    </div>
+                    <div class="text-sm text-orange-600">Pending</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex gap-2">
+                    <a href="/?filter=all" class="px-4 py-2 rounded-lg font-medium bg-indigo-600 text-white">
+                        Semua ({{ tasks|length }})
+                    </a>
+                    <a href="/?filter=pending" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">
+                        Pending ({{ tasks|selectattr('status', '==', 'pending')|list|length }})
+                    </a>
+                    <a href="/?filter=completed" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">
+                        Selesai ({{ tasks|selectattr('status', '==', 'completed')|list|length }})
+                    </a>
+                </div>
+                <button type="button" onclick="document.getElementById('taskForm').style.display='block'" 
+                        class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    Tambah Task
+                </button>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div id="taskForm" class="bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
+            <h3 class="text-xl font-semibold mb-4">Tambah Task Baru</h3>
+            <form action="/add_task" method="POST">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Judul Task</label>
+                        <input type="text" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Masukkan judul task...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                        <textarea name="description" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="3" placeholder="Masukkan deskripsi task..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prioritas</label>
+                        <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="low">Rendah</option>
+                            <option value="medium">Sedang</option>
+                            <option value="high">Tinggi</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save"><path d="M3 3h18v18H3z"/></svg>
+                            Simpan
+                        </button>
+                        <button type="button" onclick="document.getElementById('taskForm').style.display='none'" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            Batal
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Task List -->
+        <div class="space-y-4">
+            {% for task in tasks %}
+            <div class="bg-white rounded-lg shadow-lg p-6 transition-all hover:shadow-xl {% if task.status == 'completed' %}opacity-75{% endif %}">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-semibold {% if task.status == 'completed' %}line-through text-gray-500{% else %}text-gray-800{% endif %}">{{ task.title }}</h3>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full border {% if task.priority == 'high' %}bg-red-100 text-red-800 border-red-300{% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800 border-yellow-300{% else %}bg-green-100 text-green-800 border-green-300{% endif %}">
+                                {% if task.priority == 'high' %}Tinggi{% elif task.priority == 'medium' %}Sedang{% else %}Rendah{% endif %}
+                            </span>
+                        </div>
+                        {% if task.description %}
+                        <p class="text-gray-600 mb-2 {% if task.status == 'completed' %}line-through{% endif %}">{{ task.description }}</p>
+                        {% endif %}
+                        <div class="text-sm text-gray-400">Dibuat: {{ task.created_at }} • Status: {% if task.status == 'completed' %}Selesai{% else %}Pending{% endif %}</div>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <a href="/toggle_status/{{ task.id }}" class="p-2 rounded-lg transition-colors {% if task.status == 'completed' %}bg-gray-200 text-gray-600 hover:bg-gray-300{% else %}bg-green-100 text-green-600 hover:bg-green-200{% endif %}" title="{% if task.status == 'completed' %}Tandai belum selesai{% else %}Tandai selesai{% endif %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+                        </a>
+                        <a href="/edit_task/{{ task.id }}" class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors" title="Edit task">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-edit-3"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </a>
+                        <a href="/delete_task/{{ task.id }}" class="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Hapus task">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div class="text-gray-400 text-lg">Belum ada task</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
